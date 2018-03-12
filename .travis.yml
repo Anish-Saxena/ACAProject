@@ -1,5 +1,3 @@
 language: go
 go: 1.9
-script: 
-cd hfs
-go test
+script: cd hfs && go test
