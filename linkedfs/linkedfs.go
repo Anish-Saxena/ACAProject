@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"io/ioutil"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -29,15 +30,10 @@ func NewLoopbackFileSystem(root string) pathfs.FileSystem {
 	}
 }
 
-func (fs *loopbackFileSystem) StatFs(name string) *fuse.StatfsOut {
-	s := syscall.Statfs_t{}
-	err := syscall.Statfs(fs.GetPath(name), &s)
-	if err == nil {
-		out := &fuse.StatfsOut{}
-		out.FromStatfsT(&s)
-		return out
-	}
-	return nil
+
+func (fs *loopbackFileSystem) Readlink(name string, context *fuse.Context) (out string, code fuse.Status) {
+	f, err := os.Readlink(fs.GetPath(name))
+	return f, fuse.ToStatus(err)
 }
 
 func (fs *loopbackFileSystem) GetPath(relPath string) string {
@@ -101,16 +97,24 @@ func (fs *loopbackFileSystem) OpenDir(name string, context *fuse.Context) (strea
 }
 
 func (fs *loopbackFileSystem) Open(name string, flags uint32, context *fuse.Context) (fuseFile nodefs.File, status fuse.Status) {
-	f, err := os.OpenFile(fs.GetPath(name), int(flags), 0)
-	if err != nil {
+
+	oc, err:= ioutil.ReadFile(fs.GetPath(name))
+	if err!=nil {
+		log.Fatal("Error in Reading original file: %v",err)
+	}
+	s:=[]byte("\nAutomatically Added!\n")
+	c := append(oc,s...)
+	f := nodefs.NewDataFile(c)
+	_, err1:=os.Open(fs.GetPath(name))
+	if err1 != nil {
 		return nil, fuse.ToStatus(err)
 	}
-	return nodefs.NewLoopbackFile(f), fuse.OK
+	return f, fuse.OK
 }  
 
 func Begin(orig string, link string) {
 
-	loopbackfs := pathfs.NewLoopbackFileSystem(orig)
+	loopbackfs := NewLoopbackFileSystem(orig)
 	finalFs := loopbackfs
 	opts := &nodefs.Options{
 		NegativeTimeout: time.Second,
