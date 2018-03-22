@@ -35,3 +35,30 @@ func TestGetAttr(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenDir(t *testing.T) {
+	fs := &NewFS{FileSystem: pathfs.NewDefaultFileSystem()}
+	expectl := []fuse.DirEntry{
+		{Name: "file1.txt", Mode: fuse.S_IFREG},
+		{Name: "file2.txt", Mode: fuse.S_IFREG},
+		{Name: "file3.txt", Mode: fuse.S_IFREG}}
+	str := []string{
+		"", "abc", "xyz", "a1b2c3", ".", "cd"}
+	statusok := fuse.OK
+	statuserr := fuse.ENOENT
+	c := &fuse.Context{}
+	for i := 0; i < 6; i++ {
+		a, b := fs.OpenDir(str[i], c)
+		if i == 0 {
+			for j := 0; j < 3; j++ {
+				if a[j].Name != expectl[j].Name || a[j].Mode != expectl[j].Mode || b != statusok {
+					t.Error("Open Dir Test for true case, entry number ", j+1, " failed!")
+				}
+			}
+		} else {
+			if a != nil || b != statuserr {
+				t.Error("Open Dir Test for false case number ", i+1, " failed!")
+			}
+		}
+	}
+}

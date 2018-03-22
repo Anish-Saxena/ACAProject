@@ -2,8 +2,9 @@ package hfs
 
 import (
 	"flag"
-	"log"
 	"fmt"
+	"log"
+
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
@@ -53,8 +54,8 @@ func (fs *NewFS) Open(s string, flags uint32, context *fuse.Context) (file nodef
 	return nil, fuse.ENOENT
 }
 
-func BeginServer(mp string) () {
-	fs:= &NewFS{FileSystem: pathfs.NewDefaultFileSystem()}
+func BeginServer(mp string) {
+	fs := &NewFS{FileSystem: pathfs.NewDefaultFileSystem()}
 	pnfs := pathfs.NewPathNodeFs(fs, nil)
 	server, _, err := nodefs.MountRoot(flag.Arg(0), pnfs.Root(), nil)
 	if err != nil {

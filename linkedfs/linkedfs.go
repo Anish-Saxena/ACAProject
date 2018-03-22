@@ -3,12 +3,13 @@ package linkedfs
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
-	"io/ioutil"
 	"path/filepath"
 	"syscall"
 	"time"
+
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
@@ -29,7 +30,6 @@ func NewLoopbackFileSystem(root string) pathfs.FileSystem {
 		Root:       root,
 	}
 }
-
 
 func (fs *loopbackFileSystem) Readlink(name string, context *fuse.Context) (out string, code fuse.Status) {
 	f, err := os.Readlink(fs.GetPath(name))
@@ -98,19 +98,15 @@ func (fs *loopbackFileSystem) OpenDir(name string, context *fuse.Context) (strea
 
 func (fs *loopbackFileSystem) Open(name string, flags uint32, context *fuse.Context) (fuseFile nodefs.File, status fuse.Status) {
 
-	oc, err:= ioutil.ReadFile(fs.GetPath(name))
-	if err!=nil {
-		log.Fatal("Error in Reading original file: %v",err)
+	oc, err := ioutil.ReadFile(fs.GetPath(name))
+	if err != nil {
+		log.Fatal("Error in Reading original file: %v", err)
 	}
-	s:=[]byte("\nAutomatically Added!\n")
-	c := append(oc,s...)
+	s := []byte("\nAutomatically Added!\n")
+	c := append(oc, s...)
 	f := nodefs.NewDataFile(c)
-	_, err1:=os.Open(fs.GetPath(name))
-	if err1 != nil {
-		return nil, fuse.ToStatus(err)
-	}
 	return f, fuse.OK
-}  
+}
 
 func Begin(orig string, link string) {
 
