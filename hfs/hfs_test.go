@@ -62,3 +62,18 @@ func TestOpenDir(t *testing.T) {
 		}
 	}
 }
+
+func TestOpen(t *testing.T) {
+	fs := &NewFS{FileSystem: pathfs.NewDefaultFileSystem()}
+	statuserr := fuse.ENOENT
+	flag := uint32(0)
+	c := &fuse.Context{}
+	fwdata := []string{
+		"f1.txt", "file.txt", "file1", "*.txt", "ls"}
+	for j := 0; j < 5; j++ {
+		a, b := fs.Open(fwdata[j], flag, c)
+		if a != nil || b != statuserr {
+			t.Error("Open Test for false case number ", j+1, " failed!")
+		}
+	}
+}
